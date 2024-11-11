@@ -1,0 +1,25 @@
+{% extends "base2.html" %}
+
+{% block content %}
+<div class="container mx-auto mt-8 p-4">
+    <h2 class="text-2xl font-bold mb-6">My Completed Waste Collection Requests</h2>
+
+    {% if completed_requests %}
+        <ul class="space-y-4">
+            {% for request in completed_requests %}
+                <li class="p-4 bg-white shadow rounded">
+                    <div>
+                        <p><strong>Waste Type:</strong> {{ request.waste_type }}</p>
+                        <p><strong>Quantity:</strong> {{ request.quantity }} kg</p>
+                        <p><strong>Collection Time:</strong> {{ request.collection_time }}</p>
+                        <p><strong>Location:</strong> {{ request.collection_location }}</p>
+                        <p><strong>Created At:</strong> {{ request.created_at }}</p>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-gray-600">No completed requests found.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base2.html" %}
+
+{% block content %}
+<div class="container mx-auto mt-8 p-4">
+    <h2 class="text-2xl font-bold mb-6">My Waste Collection Requests</h2>
+
+    {% if pending_requests %}
+        <ul class="space-y-4">
+            {% for request in pending_requests %}
+                <li class="p-4 bg-white shadow rounded">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p><strong>Waste Type:</strong> {{ request.waste_type }}</p>
+                            <p><strong>Quantity:</strong> {{ request.quantity }} kg</p>
+                            <p><strong>Collection Time:</strong> {{ request.collection_time }}</p>
+                            <p><strong>Location:</strong> {{ request.collection_location }}</p>
+                        </div>
+                        <a href="{% url 'wasteapp:mark_as_completed' request.id %}" 
+                           class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-700">
+                            Mark as Completed
+                        </a>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-gray-600">No pending requests found.</p>
+    {% endif %}
+</div>
+{% endblock %}
