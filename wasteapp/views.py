@@ -3,23 +3,41 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import WasteRequestForm
 from .models import WasteRequest
+from profileapp.models import Address
+
 
 @login_required
 def submit_waste_request(request):
     if request.method == 'POST':
-        form = WasteRequestForm(request.POST)
+        form = WasteRequestForm(request.POST, user=request.user)  # Pass user context to the form
         if form.is_valid():
             waste_request = form.save(commit=False)
-            waste_request.user = request.user  # Associate request with the logged-in user
+            waste_request.user = request.user  # Associate the request with the logged-in user
+
+            # Check if an address was selected
+            if not form.cleaned_data.get('collection_location'):
+                # Use default address if no address is selected
+                default_address = Address.objects.filter(user=request.user, is_default=True).first()
+                if default_address:
+                    waste_request.collection_location = default_address
+                else:
+                    messages.error(request, "No default address found. Please select an address.")
+                    return redirect('wasteapp:submit_request')
+            else:
+                # Save the selected address
+                waste_request.collection_location = form.cleaned_data.get('collection_location')
+
+            # Save the waste request
             waste_request.save()
             messages.success(request, 'Waste collection request submitted successfully!')
             return redirect('wasteapp:my_requests')
     else:
-        form = WasteRequestForm()
+        # Pass user context to the form to filter addresses
+        form = WasteRequestForm(user=request.user)
 
+    # Add the form to the context
     context = {'form': form}
     return render(request, 'wasteapp/submit_request.html', context)
-
 
 
 @login_required

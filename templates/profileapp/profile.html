@@ -20,7 +20,32 @@
         <label class="block text-sm font-medium">Email</label>
         <p>{{ user.email }}</p>
     </div>
-    
-    <a href="#" class="text-blue-500">Edit Profile</a>
+
+    {% if user.userprofile.profile_picture %}
+        <div class="mb-4">
+            <label class="block text-sm font-medium">Profile Picture</label>
+            <img src="{{ user.userprofile.profile_picture.url }}" alt="Profile Picture" class="w-24 h-24 rounded-full">
+        </div>
+    {% endif %}
+
+    <a href="{% url 'profileapp:edit_profile' %}" class="text-blue-500">Edit Profile</a>
 </div>
+<div class="mt-8"></div>
+<h3>Saved Addresses</h3>
+{% for address in addresses %}
+    <div class="border p-2 mb-2">
+        <p>{{ address.address }} ({{ address.address_type }})</p>
+        <p>{{ address.city }}, {{ address.state }} - {{ address.postal_code }}</p>
+        {% if address.default %}
+        <span class="bg-green-200 text-green-800 px-2 py-1 rounded">Default Address</span>
+    {% else %}
+        <a href="{% url 'profileapp:set_default_address' address.id %}" class="text-blue-500">Set as Default</a>
+    {% endif %}
+        <a href="{% url 'profileapp:delete_address' address.id %}" class="text-red-500">Delete</a>
+    </div>
+{% endfor %}
+
+    <a href="{% url 'profileapp:add_address' %}" class="text-blue-500 mt-4 block">Add New Address</a>
+</div>
+
 {% endblock %}
