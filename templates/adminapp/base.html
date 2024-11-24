@@ -13,7 +13,7 @@
 
     <!-- Additional CSS or custom styles -->
     <style>
-        /* Add your custom styles here */
+        /* Custom styles (if needed) */
     </style>
 </head>
 <body class="bg-gray-50 font-sans leading-normal tracking-normal">
@@ -47,8 +47,8 @@
         </button>
     </div>
     <div class="flex flex-col space-y-4 p-4">
-        <a href="#" class="hover:text-green-300">Dashboard</a>
-        <a href="#" class="hover:text-green-300">Users</a>
+        <a href="{% url 'adminapp:dashboard' %}" class="hover:text-green-300">Dashboard</a>
+        <a href="{% url 'adminapp:manage_users' %}" class="hover:text-green-300">Users</a>
         <a href="#" class="hover:text-green-300">Requests</a>
         <a href="#" class="hover:text-green-300">Manage Drivers</a>
     </div>
@@ -56,9 +56,7 @@
 
 <!-- Main Content -->
 <div class="pt-20 pb-8 px-4 mx-auto max-w-7xl">
-    {% block content %}
-    <!-- This is where page-specific content will be injected -->
-    {% endblock %}
+    {% block content %}{% endblock %}
 </div>
 
 <!-- Footer (Optional) -->

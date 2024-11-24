@@ -17,14 +17,8 @@ urlpatterns = [
     path("completed-requests/", views.view_completed_requests, name="view_completed_requests"),
     path("manage_users/", manage_users, name="manage_users"),
     path("toggle_user_status/<int:user_id>/", toggle_user_status, name="toggle_user_status"),
-    path("delete_user/<int:user_id>/", delete_user, name="delete_user"),    
+    path("delete_user/<int:user_id>/", delete_user, name="delete_user"),
+    path("assign-driver/<int:request_id>/", views.assign_driver, name="assign_driver"),
     
-    # # User Management
-    # path("manage-users/", views.manage_users, name="manage_users"),
     
-    # # Driver Management
-    # path("manage-drivers/", views.manage_drivers, name="manage_drivers"),
-    # path("manage-drivers/add/", views.add_driver, name="add_driver"),
-    # path("manage-drivers/edit/<int:driver_id>/", views.edit_driver, name="edit_driver"),
-    # path("manage-drivers/delete/<int:driver_id>/", views.delete_driver, name="delete_driver"),
 ]

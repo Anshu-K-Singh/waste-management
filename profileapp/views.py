@@ -5,10 +5,11 @@ from django.contrib.auth.models import User
 from .models import UserProfile, Address
 from .forms import UserProfileForm, AddressForm
 from django.shortcuts import get_object_or_404
+from account_app.decorators import role_required
 # Create your views here.
 
 
-@login_required
+@role_required(allowed_roles=['user'])
 def user_profile(request):
     """
     View to display the user's profile.
@@ -25,7 +26,10 @@ def user_profile(request):
         'addresses': addresses
     })
 
-@login_required
+
+
+
+@role_required(allowed_roles=['user'])
 def edit_profile(request):
     """
     View to edit the user's profile.
@@ -52,7 +56,10 @@ def edit_profile(request):
     })
 
 
-@login_required
+
+
+
+@role_required(allowed_roles=['user'])
 def add_address(request):
     """
     View to allow the user to add a new address.
@@ -77,7 +84,7 @@ def add_address(request):
     
 
 
-@login_required
+@role_required(allowed_roles=['user'])
 def delete_address(request, address_id):
     """
     View to allow the user to delete an address.
@@ -94,7 +101,7 @@ def delete_address(request, address_id):
     })
 
 
-@login_required
+@role_required(allowed_roles=['user'])
 def set_default_address(request, address_id):
     """
     View to set a default address for the logged-in user.

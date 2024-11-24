@@ -23,5 +23,6 @@ urlpatterns = [
     path('profile/', include('profileapp.urls')),
     path('waste/', include('wasteapp.urls')),
     path('adminn/', include('adminapp.urls')),
+    path('driver/', include('driverapp.urls')),
 
 ]

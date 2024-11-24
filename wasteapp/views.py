@@ -4,9 +4,14 @@ from django.contrib import messages
 from .forms import WasteRequestForm
 from .models import WasteRequest
 from profileapp.models import Address
+from account_app.decorators import role_required
 
+# wasteapp/views.py
+from django.core.mail import send_mail
+from django.conf import settings
+from django.urls import reverse
 
-@login_required
+@role_required(allowed_roles=['user'])
 def submit_waste_request(request):
     if request.method == 'POST':
         form = WasteRequestForm(request.POST, user=request.user)  # Pass user context to the form
@@ -16,31 +21,39 @@ def submit_waste_request(request):
 
             # Check if an address was selected
             if not form.cleaned_data.get('collection_location'):
-                # Use default address if no address is selected
-                default_address = Address.objects.filter(user=request.user, is_default=True).first()
+                default_address = Address.objects.filter(user=request.user, default=True).first()
                 if default_address:
                     waste_request.collection_location = default_address
                 else:
                     messages.error(request, "No default address found. Please select an address.")
                     return redirect('wasteapp:submit_request')
             else:
-                # Save the selected address
                 waste_request.collection_location = form.cleaned_data.get('collection_location')
 
-            # Save the waste request
             waste_request.save()
+
+            # Send email notification to admin
+            pending_requests_url = request.build_absolute_uri(reverse('adminapp:manage_pending_requests'))
+            admin_email = "k9907485@gmail.com"  # Replace with admin email address
+            send_mail(
+                subject="New Waste Collection Request Submitted",
+                message=f"A new waste collection request has been submitted. Check pending requests at {pending_requests_url}",
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[admin_email],
+                fail_silently=False,
+            )
+
             messages.success(request, 'Waste collection request submitted successfully!')
             return redirect('wasteapp:my_requests')
     else:
-        # Pass user context to the form to filter addresses
         form = WasteRequestForm(user=request.user)
 
-    # Add the form to the context
     context = {'form': form}
     return render(request, 'wasteapp/submit_request.html', context)
 
 
-@login_required
+
+@role_required(allowed_roles=['user'])
 def my_requests(request):
     # Fetch only the pending requests of the logged-in user
     pending_requests = WasteRequest.objects.filter(user=request.user, status='Pending').order_by('-created_at')
@@ -48,7 +61,7 @@ def my_requests(request):
     context = {'pending_requests': pending_requests}
     return render(request, 'wasteapp/my_requests.html', context)
 
-@login_required
+@role_required(allowed_roles=['user'])
 def mark_as_completed(request, request_id):
     try:
         # Fetch the specific request by ID and verify it belongs to the logged-in user
@@ -62,7 +75,7 @@ def mark_as_completed(request, request_id):
     return redirect('wasteapp:my_requests')
 
 
-@login_required
+@role_required(allowed_roles=['user'])
 def my_history(request):
     # Fetch only the completed requests of the logged-in user
     completed_requests = WasteRequest.objects.filter(user=request.user, status='Completed').order_by('-created_at')
