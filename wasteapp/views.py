@@ -11,8 +11,17 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 
+
+
+
 @role_required(allowed_roles=['user'])
 def submit_waste_request(request):
+    # Check if the user has at least one saved address
+    user_addresses = Address.objects.filter(user=request.user)
+    if not user_addresses.exists():
+        messages.error(request, "Please add at least one address before submitting a waste request.")
+        return redirect('profileapp:add_address')  # Redirect to the "Add Address" page
+
     if request.method == 'POST':
         form = WasteRequestForm(request.POST, user=request.user)  # Pass user context to the form
         if form.is_valid():
@@ -21,7 +30,7 @@ def submit_waste_request(request):
 
             # Check if an address was selected
             if not form.cleaned_data.get('collection_location'):
-                default_address = Address.objects.filter(user=request.user, default=True).first()
+                default_address = user_addresses.filter(default=True).first()
                 if default_address:
                     waste_request.collection_location = default_address
                 else:

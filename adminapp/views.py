@@ -7,6 +7,8 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from account_app.decorators import role_required
 from driverapp.models import DriverProfile
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 # View for the admin dashboard
@@ -18,7 +20,7 @@ def admin_dashboard(request):
     rejected_requests = WasteRequest.objects.filter(status="Rejected").count()  # Number of rejected requests
     completed_requests = WasteRequest.objects.filter(status="Completed").count()  # Number of completed requests
     # Count total users
-    total_users = User.objects.count()  # Total number of users
+    total_users = User.objects.filter(is_superuser=False).exclude(driver_profile__isnull=False).count()
     assigned_requests = WasteRequest.objects.filter(driver=request.user, status="Assigned").order_by("collection_time")
     # Create a context dictionary to pass data to the template
     context = {
@@ -91,14 +93,16 @@ def view_completed_requests(request):
 
 
 # View for managing users
+# View for managing users (excluding superusers and drivers)
 @role_required(allowed_roles=['admin'])
 def manage_users(request):
-    # Fetch all users
-    users = User.objects.all()  # Get all user objects
-    # Create a context dictionary to pass data to the template
+    # Fetch all users excluding superusers and drivers
+    users = User.objects.filter(is_superuser=False).exclude(driver_profile__isnull=False)
+    # Prepare context
     context = {"users": users}
-    # Render the manage users template with the context data
+    # Render the manage_users template
     return render(request, "adminapp/manage_users.html", context)
+
 
 
 # View for toggling a user's active status
@@ -147,8 +151,55 @@ def assign_driver(request, request_id):
         # Assign the driver to the waste request
         waste_request.driver = driver
         waste_request.save()  # Save the change without altering the status
-        messages.success(request, f"Driver {driver.username} assigned successfully.")
+
+        # Send an email notification to the driver
+        subject = "New Waste Collection Task Assigned"
+        message = (
+            f"Hello {driver.username},\n\n"
+            f"You have been assigned a new waste collection task.\n\n"
+            f"Details:\n"
+            f"Type of Waste: {waste_request.waste_type}\n"
+            f"Quantity: {waste_request.quantity}\n"
+            f"Collection Location: {waste_request.collection_location}\n"
+            f"Collection Time: {waste_request.collection_time}\n\n"
+            f"Click the link below to view the task in your dashboard:\n"
+            f"{request.build_absolute_uri('/driverapp/dashboard/')}\n\n"
+            f"Thank you,\n"
+            f"Waste Management Team"
+        )
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [driver.email]
+        print(driver.email)
+        try:
+            send_mail(subject, message, from_email, recipient_list)
+            messages.success(request, f"Driver {driver.username} assigned successfully. Email notification sent.")
+        except Exception as e:
+            messages.error(request, f"Driver {driver.username} assigned successfully, but email failed to send. Error: {e}")
+
         return redirect("adminapp:manage_pending_requests")
 
     context = {"waste_request": waste_request, "drivers": drivers}
     return render(request, "adminapp/assign_driver.html", context)
+
+
+
+# View for managing drivers
+@role_required(allowed_roles=['admin'])
+def manage_drivers(request):
+    # Fetch all drivers with an associated DriverProfile
+    drivers = DriverProfile.objects.select_related('user').all()
+    # Prepare context
+    context = {"drivers": drivers}
+    # Render the manage_drivers template
+    return render(request, "adminapp/manage_drivers.html", context)
+
+
+# adminapp/views.py
+
+
+
+
+def user_detail(request, user_id):
+    """Fetch and return user details."""
+    user = get_object_or_404(User, id=user_id)
+    return render(request, 'adminapp/user_detail.html', {'user': user})
